@@ -2,6 +2,7 @@ import torch
 import copy
 import torch.nn as nn
 import torch.nn.functional as F
+import numpy as np
 
 from scale_rl.agents.td3.td3_network import (
     Actor_TD3,
