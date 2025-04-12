@@ -16,8 +16,14 @@ class Actor_SAC(nn.Module):
         ############################
         # YOUR IMPLEMENTATION HERE #
         self.l1 = nn.Linear(state_dim, 256)
+        # Adding layer normalization here
+        
+        # Block to be replicated starts here
+        self.layer_norm1 = nn.LayerNorm(256)
         self.l2 = nn.Linear(256, 256)
         self.l3 = nn.Linear(256, 2 * action_dim)
+        # Block to be replicated ends here
+
         self.action_dim = action_dim
         ############################
         self.max_action = max_action
@@ -28,8 +34,12 @@ class Actor_SAC(nn.Module):
         ############################
         # YOUR IMPLEMENTATION HERE #
         x = F.relu(self.l1(state))
+        # Adding residual connections here
+        residual = x
+        x = self.layer_norm1(x)
         x = F.relu(self.l2(x))
         x = self.l3(x)
+        x = x + residual
         mean, log_std = torch.split(x, self.action_dim, dim=-1)
         ############################
         log_std = torch.clamp(log_std, min=LOG_STD_MIN, max=LOG_STD_MAX)

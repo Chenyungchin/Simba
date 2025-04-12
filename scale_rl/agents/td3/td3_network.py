@@ -7,6 +7,7 @@ class Actor_TD3(nn.Module):
         super(Actor_TD3, self).__init__()
 
         self.l1 = nn.Linear(state_dim, 256)
+        self.layer_norm1 = nn.LayerNorm(256)
         self.l2 = nn.Linear(256, 256)
         self.l3 = nn.Linear(256, action_dim)
 
@@ -15,7 +16,11 @@ class Actor_TD3(nn.Module):
 
     def forward(self, state):
         a = F.relu(self.l1(state))
+        residual = a
+        a = self.layer_norm1(a)
         a = F.relu(self.l2(a))
+        a = self.l3(a)
+        a = a + residual
         return self.max_action * torch.tanh(self.l3(a))
 
 
