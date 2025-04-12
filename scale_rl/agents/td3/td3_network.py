@@ -44,24 +44,28 @@ class Critic_TD3(nn.Module):
 
         # Q1 architecture
         self.l1 = nn.Linear(state_dim + action_dim, 256)
-        self.l2 = nn.Linear(256, 256)
-        self.l3 = nn.Linear(256, 1)
+        n = 2
+        self.blocks = nn.ModuleList(ResidualBlock(256) for _ in range(n))
+        self.l2 = nn.Linear(256, 1)
+
 
         # Q2 architecture
-        self.l4 = nn.Linear(state_dim + action_dim, 256)
-        self.l5 = nn.Linear(256, 256)
-        self.l6 = nn.Linear(256, 1)
+        self.l3 = nn.Linear(state_dim + action_dim, 256)
+        self.blocks2 = nn.ModuleList(ResidualBlock(256) for _ in range(n))
+        self.l4 = nn.Linear(256, 1)
 
 
     def forward(self, state, action):
         sa = torch.cat([state, action], 1)
         q1 = F.relu(self.l1(sa))
-        q1 = F.relu(self.l2(q1))
-        q1 = self.l3(q1)
+        for block in self.blocks:
+            q1 = block(q1)
+        q1 = self.l2(q1)
 
-        q2 = F.relu(self.l4(sa))
-        q2 = F.relu(self.l5(q2))
-        q2 = self.l6(q2)
+        q2 = F.relu(self.l3(sa))
+        for block in self.blocks2:
+            q2 = block(q2)
+        q2 = self.l4(q2)
         return q1, q2
 
 
@@ -69,6 +73,7 @@ class Critic_TD3(nn.Module):
         sa = torch.cat([state, action], 1)
 
         q1 = F.relu(self.l1(sa))
-        q1 = F.relu(self.l2(q1))
-        q1 = self.l3(q1)
+        for block in self.blocks:
+            q1 = block(q1)
+        q1 = self.l2(q1)
         return q1

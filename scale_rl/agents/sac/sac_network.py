@@ -95,8 +95,9 @@ class Critic_SAC(nn.Module):
         ############################
         # YOUR IMPLEMENTATION HERE #
         self.l1 = nn.Linear(state_dim + action_dim, 256)
-        self.l2 = nn.Linear(256, 256)
-        self.l3 = nn.Linear(256, 1)
+        n = 2
+        self.blocks = nn.ModuleList(ResidualBlock(256) for _ in range(n))
+        self.l2 = nn.Linear(256, 1)
         ############################
 
         # Q2 architecture
@@ -106,9 +107,9 @@ class Critic_SAC(nn.Module):
         # 3. l6: 256 → 1
         ############################
         # YOUR IMPLEMENTATION HERE #
-        self.l4 = nn.Linear(state_dim + action_dim, 256)
-        self.l5 = nn.Linear(256, 256)
-        self.l6 = nn.Linear(256, 1)
+        self.l3 = nn.Linear(state_dim + action_dim, 256)
+        self.blocks2 = nn.ModuleList(ResidualBlock(256) for _ in range(n))
+        self.l4 = nn.Linear(256, 1)
         ############################
 
 
@@ -127,12 +128,14 @@ class Critic_SAC(nn.Module):
         ############################
         # YOUR IMPLEMENTATION HERE #
         x = F.relu(self.l1(sa))
-        x = F.relu(self.l2(x))
-        q1 = self.l3(x)
+        for block in self.blocks:
+            x = block(x)
+        q1 = self.l2(x)
 
-        x = F.relu(self.l4(sa))
-        x = F.relu(self.l5(x))
-        q2 = self.l6(x)
+        x = F.relu(self.l3(sa))
+        for block in self.blocks2:
+            x = block(x)
+        q2 = self.l4(x)
         ############################
         return q1, q2
 
@@ -146,7 +149,8 @@ class Critic_SAC(nn.Module):
         ############################
         # YOUR IMPLEMENTATION HERE #
         x = F.relu(self.l1(sa))
-        x = F.relu(self.l2(x))
-        q1 = self.l3(x)
+        for block in self.blocks:
+            x = block(x)
+        q1 = self.l2(x)
         ############################
         return q1
