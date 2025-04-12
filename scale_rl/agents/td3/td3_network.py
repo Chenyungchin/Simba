@@ -35,7 +35,7 @@ class Actor_TD3(nn.Module):
             a = block(a)
         a = F.relu(self.l2(a))
         a = self.layer_norm1(a)
-        return self.max_action * torch.tanh(self.l3(a))
+        return self.max_action * torch.tanh(a)
 
 
 class Critic_TD3(nn.Module):
