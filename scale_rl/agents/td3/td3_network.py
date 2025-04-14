@@ -47,6 +47,7 @@ class Critic_TD3(nn.Module):
         n = 1
         self.blocks = nn.ModuleList(ResidualBlock(256) for _ in range(n))
         self.l2 = nn.Linear(256, 256)
+        self.layer_norm2 = nn.LayerNorm(256)
         self.l3 = nn.Linear(256, 1)
 
 
@@ -54,6 +55,7 @@ class Critic_TD3(nn.Module):
         self.l4 = nn.Linear(state_dim + action_dim, 256)
         self.blocks2 = nn.ModuleList(ResidualBlock(256) for _ in range(n))
         self.l5 = nn.Linear(256, 256)
+        self.layer_norm3 = nn.LayerNorm(256)
         self.l6 = nn.Linear(256, 1)
 
 
@@ -63,12 +65,14 @@ class Critic_TD3(nn.Module):
         for block in self.blocks:
             q1 = block(q1)
         q1 = F.relu(self.l2(q1))
+        q1 = self.layer_norm2(q1)
         q1 = self.l3(q1)
 
         q2 = F.relu(self.l4(sa))
         for block in self.blocks2:
             q2 = block(q2)
         q2 = F.relu(self.l5(q2))
+        q2 = self.layer_norm3(q2)
         q2 = self.l6(q2)
         return q1, q2
 
@@ -80,5 +84,6 @@ class Critic_TD3(nn.Module):
         for block in self.blocks:
             q1 = block(q1)
         q1 = F.relu(self.l2(q1))
+        q1 = self.layer_norm2(q1)
         q1 = self.l3(q1)
         return q1
