@@ -18,7 +18,9 @@ from scale_rl.evaluation import eval_policy
 def init_flags():
 
     flags = {
-            "env": "Pendulum-v1",
+            "env_type": "dmc",
+            # "env_name": "pendulum-swingup",
+            "env_name": "humanoid-run",
             "seed":0,
             "start_timesteps": 1e4,
             "max_timesteps": 5e4,
@@ -41,7 +43,7 @@ def main(policy_name = 'TD3'):
         #############################
 
         args = init_flags()
-        env = create_envs(args["env"])
+        env = create_envs(args["env_type"], args["env_name"], args["seed"])
         env.reset(seed=args["seed"])
         env.action_space.seed(args["seed"])
         torch.manual_seed(args["seed"])
@@ -74,7 +76,7 @@ def main(policy_name = 'TD3'):
 
 
 
-        evaluations = [eval_policy(policy, args["env"], args["seed"])]
+        evaluations = [eval_policy(policy, args["env_type"], args["env_name"], args["seed"])]
         state, _ = env.reset()
         done = False
         episode_reward = 0
