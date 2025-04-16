@@ -15,20 +15,21 @@ class RunningNorm(nn.Module):
         
     def forward(self, x, update=True):
         # Use running stats for normalization
-        if x.shape[-1] != self.running_mean.shape[0]:
-            return x
+        # if x.shape[-1] != self.running_mean.shape[0]:
+        #     return x
             
         out = (x - self.running_mean) / torch.sqrt(self.running_var + self.epsilon)
         
         # Update running stats during training
         if update and self.training:
-            batch_mean = x.mean(0)
-            batch_var = x.var(0, unbiased=False)
+            with torch.no_grad():
+                batch_mean = x.mean(0)
+                batch_var = x.var(0, unbiased=False)
 
-            # Update running mean and variance
-            delta = batch_mean - self.running_mean
-            self.running_mean += self.momentum * delta
-            self.running_var = (1 - self.momentum) * self.running_var + \
-                              self.momentum * batch_var
+                # Update running mean and variance
+                delta = batch_mean - self.running_mean
+                self.running_mean += self.momentum * delta
+                self.running_var = (1 - self.momentum) * self.running_var + \
+                                self.momentum * batch_var
                 
         return out
