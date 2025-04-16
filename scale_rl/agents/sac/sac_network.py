@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from scale_rl.agents.running_normal import RunningNorm
+import numpy as np
 
 LOG_STD_MIN = -20
 LOG_STD_MAX = 2
@@ -23,6 +25,7 @@ class ResidualBlock(nn.Module):
 class Actor_SAC(nn.Module):
     def __init__(self, state_dim, action_dim, max_action):
         super(Actor_SAC, self).__init__()
+        self.running_norm = RunningNorm([state_dim])
         # [HINT] Construct a neural network as the actor. Return its value using forward You need to write down three linear layers.
         # 1. l1: state_dim → 256
         # 2. l2: 256 → 256
@@ -47,6 +50,8 @@ class Actor_SAC(nn.Module):
         # Apply ReLU activation after layer l1 and l2
         ############################
         # YOUR IMPLEMENTATION HERE #
+        state = self.running_norm(state)
+        
         x = F.relu(self.l1(state))
         # Adding residual connections here
         for block in self.blocks:
@@ -69,6 +74,8 @@ class Actor_SAC(nn.Module):
 
         ############################
         # YOUR IMPLEMENTATION HERE #
+        state = self.running_norm(state,update=self.training)
+
         mean, log_std = self.forward(state)
         std = log_std.exp()
         normal = torch.distributions.Normal(mean, std)
@@ -94,6 +101,9 @@ class Critic_SAC(nn.Module):
         # 3. l3: 256 → 1
         ############################
         # YOUR IMPLEMENTATION HERE #
+        self.state_norm = RunningNorm([state_dim])
+        self.action_norm = RunningNorm([action_dim])
+
         self.l1 = nn.Linear(state_dim + action_dim, 256)
         n = 2
         self.blocks = nn.ModuleList(ResidualBlock(256) for _ in range(n))
@@ -127,6 +137,10 @@ class Critic_SAC(nn.Module):
 
         ############################
         # YOUR IMPLEMENTATION HERE #
+        state = self.state_norm(state)
+        action = self.action_norm(action)
+        sa = torch.cat([state, action], 1)
+
         x = F.relu(self.l1(sa))
         for block in self.blocks:
             x = block(x)
@@ -141,13 +155,16 @@ class Critic_SAC(nn.Module):
 
 
     def Q1(self, state, action):
-        sa = torch.cat([state, action], 1)
         # [HINT] only returns q1 for actor update using layers l1, l2, l3
         # 1. Apply ReLU activation after layer l1
         # 2. Apply ReLU activation after layer l2
         # 3. Return output as q1 from layer l3
         ############################
         # YOUR IMPLEMENTATION HERE #
+        state = self.state_norm(state, update=self.training)
+        action = self.action_norm(action, update=self.training)
+        sa = torch.cat([state, action], 1)
+
         x = F.relu(self.l1(sa))
         for block in self.blocks:
             x = block(x)
