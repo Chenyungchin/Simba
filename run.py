@@ -1,5 +1,6 @@
 # =========== Import =============
 import random
+import gymnasium as gym
 import numpy as np
 import torch
 import torch.nn as nn
@@ -19,11 +20,10 @@ def init_flags():
 
     flags = {
             "env_type": "dmc",
-            # "env_name": "pendulum-swingup",
-            "env_name": "humanoid-run",
+            "env_name": "pendulum-swingup",
             "seed":0,
             "start_timesteps": 1e4,
-            "max_timesteps": 5e4,
+            "max_timesteps": 1.1e4,
             "expl_noise": 0.01,
             "batch_size": 256,
             "discount":0.99,
@@ -31,7 +31,11 @@ def init_flags():
             "policy_noise": 0.05,
             "noise_clip":0.5,
             "policy_freq": 2,
-            "save_model": "store_true"
+            "save_model": "store_true",
+            "rescale_action": True,
+            "no_termination": False,
+            "action_repeat": 2,
+            "reward_scale": 1
     }
 
     return flags
@@ -43,7 +47,7 @@ def main(policy_name = 'TD3'):
         #############################
 
         args = init_flags()
-        env = create_envs(args["env_type"], args["env_name"], args["seed"])
+        env = create_envs(args["env_type"], args["env_name"], args["seed"], args["rescale_action"], args["no_termination"], args["action_repeat"], args["reward_scale"])
         env.reset(seed=args["seed"])
         env.action_space.seed(args["seed"])
         torch.manual_seed(args["seed"])
@@ -76,7 +80,7 @@ def main(policy_name = 'TD3'):
 
 
 
-        evaluations = [eval_policy(policy, args["env_type"], args["env_name"], args["seed"])]
+        evaluations = [eval_policy(policy, args["env_type"], args["env_name"], args["seed"], args["rescale_action"], args["no_termination"], args["action_repeat"], args["reward_scale"])]
         state, _ = env.reset()
         done = False
         episode_reward = 0
@@ -98,7 +102,7 @@ def main(policy_name = 'TD3'):
             # Perform action
             next_state, reward, terminated, truncated, _ = env.step(action)
             done = terminated or truncated
-            done_bool = float(done) if episode_timesteps < env._max_episode_steps else 0
+            done_bool = float(done) if episode_timesteps < 1000 else 0
 
             # Store data in replay buffer
             replay_buffer.add(state, action, next_state, reward, done_bool)
@@ -136,12 +140,22 @@ plt.title('Pendulum with TD3')
 plt.grid()
 plt.show()
 
-evaluation_sac = main(policy_name = 'SAC')
+# save and load the reward data
 
-plt.figure(figsize=(10, 5))
-plt.plot(evaluation_sac)
-plt.xlabel('Episode')
-plt.ylabel('Reward')
-plt.title('Pendulum with SAC')
-plt.grid()
-plt.show()
+import pickle
+with open('evaluation_td3.pkl', 'wb') as file:
+    pickle.dump(evaluation_td3, file)
+
+# with open('evaluation_td3.pkl', 'rb') as file:
+#     loaded_data = pickle.load(file)
+# print(loaded_data)
+
+# evaluation_sac = main(policy_name = 'SAC')
+
+# plt.figure(figsize=(10, 5))
+# plt.plot(evaluation_sac)
+# plt.xlabel('Episode')
+# plt.ylabel('Reward')
+# plt.title('Pendulum with SAC')
+# plt.grid()
+# plt.show()

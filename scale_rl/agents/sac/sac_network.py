@@ -23,9 +23,10 @@ class ResidualBlock(nn.Module):
         return x + residual
 
 class Actor_SAC(nn.Module):
-    def __init__(self, state_dim, action_dim, max_action):
+    def __init__(self, state_dim, action_dim, max_action, use_SIMBA = False):
         super(Actor_SAC, self).__init__()
         self.running_norm = RunningNorm([state_dim])
+        self.use_SIMBA = use_SIMBA
         # [HINT] Construct a neural network as the actor. Return its value using forward You need to write down three linear layers.
         # 1. l1: state_dim → 256
         # 2. l2: 256 → 256
@@ -54,10 +55,12 @@ class Actor_SAC(nn.Module):
         
         x = F.relu(self.l1(state))
         # Adding residual connections here
-        for block in self.blocks:
-            x = block(x)
+        if self.use_SIMBA:
+            for block in self.blocks:
+                x = block(x)
         x = F.relu(self.l2(x))
-        x = self.layer_norm2(x)
+        if self.use_SIMBA:
+            x = self.layer_norm2(x)
         mean, log_std = torch.split(x, self.action_dim, dim=-1)
         ############################
         log_std = torch.clamp(log_std, min=LOG_STD_MIN, max=LOG_STD_MAX)
@@ -92,7 +95,7 @@ class Actor_SAC(nn.Module):
         return action, log_prob
 
 class Critic_SAC(nn.Module):
-    def __init__(self, state_dim, action_dim):
+    def __init__(self, state_dim, action_dim, use_SIMBA = False):
         super(Critic_SAC, self).__init__()
         # Q1 architecture
         # [HINT] Construct a neural network as the first critic. Return its value using forward You need to write down three linear layers.
@@ -103,6 +106,8 @@ class Critic_SAC(nn.Module):
         # YOUR IMPLEMENTATION HERE #
         self.state_norm = RunningNorm([state_dim])
         self.action_norm = RunningNorm([action_dim])
+
+        self.use_SIMBA = use_SIMBA
 
         self.l1 = nn.Linear(state_dim + action_dim, 256)
         n = 2
@@ -142,13 +147,15 @@ class Critic_SAC(nn.Module):
         sa = torch.cat([state, action], 1)
 
         x = F.relu(self.l1(sa))
-        for block in self.blocks:
-            x = block(x)
+        if self.use_SIMBA:
+            for block in self.blocks:
+                x = block(x)
         q1 = self.l2(x)
 
         x = F.relu(self.l3(sa))
-        for block in self.blocks2:
-            x = block(x)
+        if self.use_SIMBA:
+            for block in self.blocks2:
+                x = block(x)
         q2 = self.l4(x)
         ############################
         return q1, q2
@@ -166,8 +173,9 @@ class Critic_SAC(nn.Module):
         sa = torch.cat([state, action], 1)
 
         x = F.relu(self.l1(sa))
-        for block in self.blocks:
-            x = block(x)
+        if self.use_SIMBA:
+            for block in self.blocks:
+                x = block(x)
         q1 = self.l2(x)
         ############################
         return q1
