@@ -35,8 +35,8 @@ class DecisionSpaceEstimator:
         outputs = []
         for data in dataloader:
             data = data.to(device)
+            # TODO: implement forward function for SAC
             outputs.append(model(data))
-
         outputs = torch.cat(outputs)
         outputs = outputs.reshape(self.space_shape)
         return outputs

@@ -2,7 +2,7 @@ from torch import nn
 
 from typing import List
 
-from util.models.activations import SinActivation, GaussianActivation
+from simplicity_bias.util.models.activations import SinActivation, GaussianActivation
 
 
 SUPPORTED_ACTIVATIONS = [
@@ -57,6 +57,7 @@ def initialize_weights(
         bias_init = lambda bias: bias.data.zero_()
     else:
         raise ValueError(f"Invalid bias_mode {bias_mode}")
+    
 
     # Initialize weights and biases for all linear layers
     for module in model.modules():

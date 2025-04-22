@@ -5,10 +5,10 @@ import numpy as np
 import torch
 from torch import nn
 
-from util.models.neural_networks import DummyNeuralNetwork, initialize_weights
-from util.models.activations import SinActivation, GaussianActivation
-from util.estimations import LinearDecisionSpaceEstimator
-from util.spectral_analysis import get_mean_frequency_2d
+from simplicity_bias.util.models.neural_networks import DummyNeuralNetwork, initialize_weights
+from simplicity_bias.util.models.activations import SinActivation, GaussianActivation
+from simplicity_bias.util.estimations import LinearDecisionSpaceEstimator
+from simplicity_bias.util.spectral_analysis import get_mean_frequency_2d
 
 MIN_AMPLITUDE = 0.10
 MAX_AMPLITUDE = 100
@@ -69,7 +69,7 @@ def analyze_output_space(model, param_init_config):
     return simplicity_score
 
 
-def test():
+def test(model=None):
     assert AMPLITUDE_SPACING in ["linear", "log"]
     if AMPLITUDE_SPACING == "linear":
         amplitudes = np.linspace(MIN_AMPLITUDE, MAX_AMPLITUDE, STEPS_AMPLITUDE)
@@ -78,7 +78,8 @@ def test():
     else:
         raise ValueError(f"AMPLITUDE_SPACING must be 'linear' or 'log'.")
     
-    model = DummyNeuralNetwork(input_dim=2, output_dim=1).to(DEVICE)
+    if model is None:
+        model = DummyNeuralNetwork(input_dim=2, output_dim=1).to(DEVICE)
     
     for amplitude in amplitudes:
         param_init_config = {
