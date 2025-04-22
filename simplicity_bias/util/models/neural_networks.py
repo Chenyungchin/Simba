@@ -60,9 +60,25 @@ def initialize_weights(
     
 
     # Initialize weights and biases for all linear layers
-    for module in model.modules():
+    for i, module in enumerate(model.modules()):
         if isinstance(module, nn.Linear):
+            # print(f"Module {i}: {module.__class__.__name__} - Linear")
             init_fn(module.weight)
             if module.bias is not None:
                 bias_init(module.bias)
+
+        elif isinstance(module, nn.LayerNorm):
+            # print(f"Module {i}: {module.__class__.__name__} - LayerNorm")
+            init_fn(module.weight)
+            if module.bias is not None:
+                bias_init(module.bias)
+
+        elif module.__class__.__name__ == "ResidualBlock":
+            # print(f"Module {i}: {module.__class__.__name__} - ResidualBlock")
+            # print(module)
+            pass # don't need to do anything, as the residual block will be initialized by the linear layer and Layernorm inside it
+
+        elif module.__class__.__name__ == "RunningNorm":
+            # print(f"Module {i}: {module.__class__.__name__} - RunningNorm")
+            pass # keep the running mean and var as they are, as they are initialized to 0 and 1 respectively
                 

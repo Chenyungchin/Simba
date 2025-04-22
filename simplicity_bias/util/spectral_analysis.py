@@ -4,6 +4,10 @@ import torch
 def get_mean_frequency_2d(coeff_2d: torch.Tensor):
     """Get the mean frequency of the 2D Fourier coefficients."""
 
+    if torch.unique(coeff_2d).numel() == 1:
+        # All coefficients are the same, return 0 frequency
+        return 0.0
+
     dim_u, dim_v = coeff_2d.shape
     max_freq = round(((dim_u - 1) ** 2 + (dim_v - 1) ** 2) ** (1 / 2))
 
@@ -23,5 +27,6 @@ def get_mean_frequency_2d(coeff_2d: torch.Tensor):
 
     # Compute mean frequency
     mean_freq = (coeff_1d * torch.Tensor(range(max_freq + 1))).sum() / max_freq
+
 
     return mean_freq.item()

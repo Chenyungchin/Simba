@@ -3,6 +3,7 @@ from simplicity_bias.complexity_measurer import analyze_output_space
 from simplicity_bias.util.models.neural_networks import DummyNeuralNetwork
 import numpy as np
 import torch
+import json
 
 
 MIN_AMPLITUDE = 0.10
@@ -34,6 +35,31 @@ def SimplicityBiasAmplitudeSweep(model):
     
     return simplicity_scores
 
+def get_agent(policy_name="TD3", use_RSNorm=False, use_LayerNorm=False, use_Residual=False):
+    if policy_name == "TD3":
+        model = create_agent(
+            policy_name=policy_name,
+            state_dim=2,
+            action_dim=1,
+            max_action=1.0,
+            discount=0.99,
+            tau=0.005,
+            policy_noise=0.05 * 1.0,
+            noise_clip=0.5 * 1.0,
+            policy_freq=2,
+            use_RSNorm=use_RSNorm,
+            use_LayerNorm=use_LayerNorm,
+            use_Residual=use_Residual,
+        )
+
+    elif policy_name == "SAC":
+        raise NotImplementedError("SAC agent is not implemented yet.")
+    
+    actor = model.actor
+    critic = model.critic
+
+    return actor, critic
+
 def main(model = None):
 
     if model is None:
@@ -44,33 +70,32 @@ def main(model = None):
     return simplicity_scores
 
 if __name__ == "__main__":
-    # SAC
-    # agent = create_agent(
-    #     policy_name="SAC",
-    #     state_dim=2,
-    #     action_dim=1,
-    #     max_action=1.0,
-    #     discount=0.99,
-    #     tau=0.005,
-    #     # 
-    #     policy_noise=0.05 * 1.0,
-    #     noise_clip=0.5 * 1.0,
-    #     policy_freq=2,
-    # )
-    agent = create_agent(
-        policy_name="TD3",
-        state_dim=2,
-        action_dim=1,
-        max_action=1.0,
-        discount=0.99,
-        tau=0.005,
-        #
-        policy_noise=0.05 * 1.0,
-        noise_clip=0.5 * 1.0,
-        policy_freq=2,
-    )
-    actor = agent.actor
-    critic = agent.critic
-    main(actor)
+    use_RSNorm = False
+    use_LayerNorm = False
+    use_Residual = False
+    policy_name = "TD3"
+    actor, critic = get_agent(policy_name=policy_name, use_RSNorm=use_RSNorm, use_LayerNorm=use_LayerNorm, use_Residual=use_Residual)
 
-    
+    simplicity_scores = main(actor)
+
+    # Save simplicity_scores to a JSON file
+    actor_mode = f"{policy_name}_{'RSNorm_' if use_RSNorm else ''}{'LayerNorm_' if use_LayerNorm else ''}{'Residual_' if use_Residual else ''}"
+
+    # Read existing data from the JSON file
+    try:
+        with open("simplicity_scores.json", "r") as f:
+            data = json.load(f)  # Load existing JSON data
+    except FileNotFoundError:
+        data = {}  # If file doesn't exist, start with an empty dictionary
+
+    # Add new data to the existing JSON object
+    if actor_mode not in data:
+        data[actor_mode] = []  # Initialize an empty list if the key doesn't exist
+    data[actor_mode].append(simplicity_scores)  # Append the new scores to the list
+
+    # Write the updated JSON object back to the file
+    with open("simplicity_scores.json", "w") as f:
+        json.dump(data, f, indent=4)
+
+    print(f"Simplicity scores for {actor_mode} saved to simplicity_scores.json")
+

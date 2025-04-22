@@ -64,7 +64,7 @@ def analyze_output_space(model, param_init_config):
     coeff_2d = coeff_2d[: coeff_2d.shape[0] // 2 + 1]
 
     mean_freq = get_mean_frequency_2d(coeff_2d)
-    simplicity_score = 1 / mean_freq
+    simplicity_score = 1 / mean_freq if mean_freq != 0 else 1000
 
     return simplicity_score
 

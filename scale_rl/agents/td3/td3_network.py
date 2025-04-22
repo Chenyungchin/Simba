@@ -17,11 +17,18 @@ class ResidualBlock(nn.Module):
         return x + residual
 
 class Actor_TD3(nn.Module):
-    def __init__(self, state_dim, action_dim, max_action, use_SIMBA=True):
+    def __init__(self, state_dim, action_dim, max_action, use_RSNorm=False, use_LayerNorm=False, use_Residual=False):
+        """
+        use_RSNorm: add RSNorm
+        use_LayerNorm: add LayerNorm
+        use_Residual: add ResidualBlock
+        """
         super(Actor_TD3, self).__init__()
         self.running_norm = RunningNorm([state_dim])
 
-        self.use_SIMBA= use_SIMBA
+        self.use_RSNorm = use_RSNorm
+        self.use_LayerNorm = use_LayerNorm
+        self.use_Residual = use_Residual
 
         self.l1 = nn.Linear(state_dim, 256)
         n = 3
@@ -34,25 +41,28 @@ class Actor_TD3(nn.Module):
 
 
     def forward(self, state):
-        state = self.running_norm(state)
+        if self.use_RSNorm:
+            state = self.running_norm(state)
         a = F.relu(self.l1(state))
-        if self.use_SIMBA:
+        if self.use_Residual:
             for block in self.blocks:
                 a = block(a)
         a = F.relu(self.l2(a))
-        if self.use_SIMBA:
+        if self.use_LayerNorm:
             a = self.layer_norm1(a)
         a = self.l3(a)
         return self.max_action * torch.tanh(a)
 
 
 class Critic_TD3(nn.Module):
-    def __init__(self, state_dim, action_dim, use_SIMBA=True):
+    def __init__(self, state_dim, action_dim, use_RSNorm=False, use_LayerNorm=False, use_Residual=False):
         super(Critic_TD3, self).__init__()
         self.state_norm = RunningNorm([state_dim])
         self.action_norm = RunningNorm([action_dim])
 
-        self.use_SIMBA = use_SIMBA
+        self.use_RSNorm = use_RSNorm
+        self.use_LayerNorm = use_LayerNorm
+        self.use_Residual = use_Residual
 
         # Q1 architecture
         self.l1 = nn.Linear(state_dim + action_dim, 256)
@@ -72,42 +82,43 @@ class Critic_TD3(nn.Module):
 
 
     def forward(self, state, action):
-        state = self.state_norm(state)
-        action = self.action_norm(action)
+        if self.use_RSNorm:
+            state = self.state_norm(state)
+            action = self.action_norm(action)
         sa = torch.cat([state, action], 1)
-        
-        sa = torch.cat([state, action], 1)
+    
         q1 = F.relu(self.l1(sa))
-        if self.use_SIMBA:
+        if self.use_Residual:
             for block in self.blocks:
                 q1 = block(q1)
         q1 = F.relu(self.l2(q1))
-        if self.use_SIMBA:
+        if self.use_LayerNorm:
             q1 = self.layer_norm2(q1)
         q1 = self.l3(q1)
 
         q2 = F.relu(self.l4(sa))
-        if self.use_SIMBA:
+        if self.use_Residual:
             for block in self.blocks2:
                 q2 = block(q2)
         q2 = F.relu(self.l5(q2))
-        if self.use_SIMBA:
+        if self.use_LayerNorm:
             q2 = self.layer_norm3(q2)
         q2 = self.l6(q2)
         return q1, q2
 
 
     def Q1(self, state, action):
-        state = self.state_norm(state)
-        action = self.action_norm(action)
+        if self.use_RSNorm:
+            state = self.state_norm(state)
+            action = self.action_norm(action)
         sa = torch.cat([state, action], 1)
 
         q1 = F.relu(self.l1(sa))
-        if self.use_SIMBA:
+        if self.use_Residual:
             for block in self.blocks:
                 q1 = block(q1)
         q1 = F.relu(self.l2(q1))
-        if self.use_SIMBA:
+        if self.use_LayerNorm:
             q1 = self.layer_norm2(q1)
         q1 = self.l3(q1)
         return q1

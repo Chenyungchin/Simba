@@ -11,7 +11,10 @@ def create_agent(
         # for TD3
         policy_noise,
         noise_clip,
-        policy_freq
+        policy_freq,
+        use_RSNorm=False,
+        use_LayerNorm=False,
+        use_Residual=False,
 ):  
     # TODO: add other agents
     if policy_name == 'SAC':
@@ -31,7 +34,11 @@ def create_agent(
             tau=tau,
             policy_noise=policy_noise,
             noise_clip=noise_clip,
-            policy_freq=policy_freq
+            policy_freq=policy_freq,
+            # simba param
+            use_RSNorm=use_RSNorm,
+            use_LayerNorm=use_LayerNorm,
+            use_Residual=use_Residual,
         )
 
     return agent
