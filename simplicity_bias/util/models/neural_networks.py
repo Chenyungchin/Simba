@@ -80,5 +80,5 @@ def initialize_weights(
 
         elif module.__class__.__name__ == "RunningNorm":
             # print(f"Module {i}: {module.__class__.__name__} - RunningNorm")
-            pass # keep the running mean and var as they are, as they are initialized to 0 and 1 respectively
+            pass # keep the running mean and var as they are
                 

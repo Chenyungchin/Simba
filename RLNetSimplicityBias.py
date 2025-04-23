@@ -13,7 +13,7 @@ STEPS_AMPLITUDE = 15
 
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-def SimplicityBiasAmplitudeSweep(model):
+def SimplicityBiasAmplitudeSweep(model, input_space=(-1, 1, -1, 1)):
     assert AMPLITUDE_SPACING in ["linear", "log"]
     if AMPLITUDE_SPACING == "linear":
         amplitudes = np.linspace(MIN_AMPLITUDE, MAX_AMPLITUDE, STEPS_AMPLITUDE)
@@ -29,7 +29,7 @@ def SimplicityBiasAmplitudeSweep(model):
             "method": "uniform",
             "amplitude": amplitude,
         }
-        simplicity_score = analyze_output_space(model, param_init_config)
+        simplicity_score = analyze_output_space(model, input_space, param_init_config)
         print(f"simplicity score: {simplicity_score:.4f}")
         simplicity_scores.append(simplicity_score)
     
@@ -60,42 +60,60 @@ def get_agent(policy_name="TD3", use_RSNorm=False, use_LayerNorm=False, use_Resi
 
     return actor, critic
 
-def main(model = None):
+def main(model = None, input_space=(-1, 1, -1, 1)):
 
     if model is None:
         model = DummyNeuralNetwork(input_dim=2, output_dim=1).to(DEVICE)
 
-    simplicity_scores = SimplicityBiasAmplitudeSweep(model)
+    simplicity_scores = SimplicityBiasAmplitudeSweep(model, input_space)
 
     return simplicity_scores
 
 if __name__ == "__main__":
-    use_RSNorm = False
+    use_RSNorm = True
     use_LayerNorm = False
     use_Residual = False
     policy_name = "TD3"
-    actor, critic = get_agent(policy_name=policy_name, use_RSNorm=use_RSNorm, use_LayerNorm=use_LayerNorm, use_Residual=use_Residual)
 
-    simplicity_scores = main(actor)
+    input_min, input_max = -100, 100
+    input_space = (input_min, input_max, input_min, input_max)
 
-    # Save simplicity_scores to a JSON file
-    actor_mode = f"{policy_name}_{'RSNorm_' if use_RSNorm else ''}{'LayerNorm_' if use_LayerNorm else ''}{'Residual_' if use_Residual else ''}"
+    sweep_list = [(False, False, False), (True, False, False), (False, True, False), (False, False, True), (True, True, True)]
+    num_trials = 10
 
-    # Read existing data from the JSON file
-    try:
-        with open("simplicity_scores.json", "r") as f:
-            data = json.load(f)  # Load existing JSON data
-    except FileNotFoundError:
-        data = {}  # If file doesn't exist, start with an empty dictionary
+    for use_RSNorm, use_LayerNorm, use_Residual in sweep_list:
+        for i in range(num_trials):
+            actor, critic = get_agent(policy_name=policy_name, use_RSNorm=use_RSNorm, use_LayerNorm=use_LayerNorm, use_Residual=use_Residual)
 
-    # Add new data to the existing JSON object
-    if actor_mode not in data:
-        data[actor_mode] = []  # Initialize an empty list if the key doesn't exist
-    data[actor_mode].append(simplicity_scores)  # Append the new scores to the list
+            simplicity_scores = main(actor, input_space)
 
-    # Write the updated JSON object back to the file
-    with open("simplicity_scores.json", "w") as f:
-        json.dump(data, f, indent=4)
+            # Save simplicity_scores to a JSON file
+            if use_RSNorm and use_LayerNorm and use_Residual:
+                actor_mode = "SIMBA"
+            elif use_RSNorm:
+                actor_mode = "MLP+RSNorm"
+            elif use_LayerNorm:
+                actor_mode = "MLP+LayerNorm"
+            elif use_Residual:
+                actor_mode = "MLP+Residual"
+            else:
+                actor_mode = "MLP"
 
-    print(f"Simplicity scores for {actor_mode} saved to simplicity_scores.json")
+            # Read existing data from the JSON file
+            try:
+                with open(f"simplicity_scores_({input_min},{input_max}).json", "r") as f:
+                    data = json.load(f)  # Load existing JSON data
+            except FileNotFoundError:
+                data = {}  # If file doesn't exist, start with an empty dictionary
+
+            # Add new data to the existing JSON object
+            if actor_mode not in data:
+                data[actor_mode] = []  # Initialize an empty list if the key doesn't exist
+            data[actor_mode].append(simplicity_scores)  # Append the new scores to the list
+
+            # Write the updated JSON object back to the file
+            with open(f"simplicity_scores_({input_min},{input_max}).json", "w") as f:
+                json.dump(data, f, indent=4)
+
+            print(f"Simplicity scores for {actor_mode} saved to simplicity_scores.json")
 

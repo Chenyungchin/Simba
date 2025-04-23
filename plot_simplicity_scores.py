@@ -3,7 +3,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # Filepath to the JSON file
-json_file = "simplicity_scores.json"
+input_min, input_max = -100, 100
+# input_min, input_max = -1, 1
+json_file = f"simplicity_scores_({input_min},{input_max}).json"
 
 # Read data from the JSON file
 with open(json_file, "r") as f:
@@ -27,7 +29,7 @@ for key, values in filtered_data.items():
 
 # Create the box plot
 plt.figure(figsize=(6, 4))
-sns.boxplot(data=plot_data, orient="h", palette="pastel")
+sns.boxplot(data=plot_data, orient="h", palette="pastel", showfliers=False)
 
 # Add labels and title
 plt.yticks(ticks=range(len(labels)), labels=labels)
@@ -36,4 +38,4 @@ plt.title("Simplicity Score Distribution")
 
 # Show the plot
 plt.tight_layout()
-plt.savefig("simplicity_scores_boxplot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"simplicity_scores_boxplot_({input_min},{input_max}).png", dpi=300, bbox_inches="tight")
