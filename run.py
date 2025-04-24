@@ -23,7 +23,7 @@ def init_flags():
             "env_name": "pendulum-swingup",
             "seed":0,
             "start_timesteps": 1e4,
-            "max_timesteps": 1.1e4,
+            "max_timesteps": 5e5,
             "expl_noise": 0.01,
             "batch_size": 256,
             "discount":0.99,
@@ -70,6 +70,9 @@ def main(policy_name = 'TD3'):
         kwargs["policy_noise"] = args["policy_noise"] * max_action
         kwargs["noise_clip"] = args["noise_clip"] * max_action
         kwargs["policy_freq"] = args["policy_freq"]
+        kwargs["use_RSNorm"] = True
+        kwargs["use_LayerNorm"] = False
+        kwargs["use_Residual"] = False
 
         policy = create_agent(**kwargs)
         
@@ -143,7 +146,7 @@ plt.show()
 # save and load the reward data
 
 import pickle
-with open('evaluation_td3.pkl', 'wb') as file:
+with open('evaluation_td3_RSNorm.pkl', 'wb') as file:
     pickle.dump(evaluation_td3, file)
 
 # with open('evaluation_td3.pkl', 'rb') as file:

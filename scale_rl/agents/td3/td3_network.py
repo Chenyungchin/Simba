@@ -17,7 +17,7 @@ class ResidualBlock(nn.Module):
         return x + residual
 
 class Actor_TD3(nn.Module):
-    def __init__(self, state_dim, action_dim, max_action, use_RSNorm=False, use_LayerNorm=False, use_Residual=False):
+    def __init__(self, state_dim, action_dim, max_action, use_RSNorm=True, use_LayerNorm=False, use_Residual=False):
         """
         use_RSNorm: add RSNorm
         use_LayerNorm: add LayerNorm
@@ -31,7 +31,7 @@ class Actor_TD3(nn.Module):
         self.use_Residual = use_Residual
 
         self.l1 = nn.Linear(state_dim, 256)
-        n = 3
+        n = 2
         self.blocks = nn.ModuleList(ResidualBlock(256) for _ in range(n))
         self.l2 = nn.Linear(256, 256)
         self.l3 = nn.Linear(256, action_dim)
@@ -55,7 +55,7 @@ class Actor_TD3(nn.Module):
 
 
 class Critic_TD3(nn.Module):
-    def __init__(self, state_dim, action_dim, use_RSNorm=False, use_LayerNorm=False, use_Residual=False):
+    def __init__(self, state_dim, action_dim, use_RSNorm=True, use_LayerNorm=False, use_Residual=False):
         super(Critic_TD3, self).__init__()
         self.state_norm = RunningNorm([state_dim])
         self.action_norm = RunningNorm([action_dim])
@@ -66,7 +66,7 @@ class Critic_TD3(nn.Module):
 
         # Q1 architecture
         self.l1 = nn.Linear(state_dim + action_dim, 256)
-        n = 3
+        n = 2
         self.blocks = nn.ModuleList(ResidualBlock(256) for _ in range(n))
         self.l2 = nn.Linear(256, 256)
         self.layer_norm2 = nn.LayerNorm(256)

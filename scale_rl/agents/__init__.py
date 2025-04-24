@@ -12,9 +12,9 @@ def create_agent(
         policy_noise,
         noise_clip,
         policy_freq,
-        use_RSNorm=False,
-        use_LayerNorm=False,
-        use_Residual=False,
+        use_RSNorm,
+        use_LayerNorm,
+        use_Residual,
 ):  
     # TODO: add other agents
     if policy_name == 'SAC':
