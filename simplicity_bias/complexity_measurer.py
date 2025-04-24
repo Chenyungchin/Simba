@@ -14,7 +14,7 @@ MIN_AMPLITUDE = 0.10
 MAX_AMPLITUDE = 100
 AMPLITUDE_SPACING = "log"  # "linear" or "log"
 STEPS_AMPLITUDE = 15
-X1, X2, Y1, Y2 = -1, 1, -1, 1
+# X1, X2, Y1, Y2 = -1, 1, -1, 1
 POINTS_PER_AXIS = 300
 BATCH_SIZE = 16384
 
@@ -23,7 +23,7 @@ DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
 
-def analyze_output_space(model, param_init_config):
+def analyze_output_space(model, input_space, param_init_config):
     """
     Inputs:
         model: The model to analyze.
@@ -36,6 +36,8 @@ def analyze_output_space(model, param_init_config):
 
     method = param_init_config["method"]
     amplitude = param_init_config["amplitude"]
+
+    X1, X2, Y1, Y2 = input_space
 
     estimator = LinearDecisionSpaceEstimator(start=(X1, Y1), end=(X2, Y2), steps=POINTS_PER_AXIS)
 
@@ -52,6 +54,9 @@ def analyze_output_space(model, param_init_config):
         b_amplitude=amplitude,
     )
 
+    # Perform warmup to calibrate running statistics without updating weights
+    warmup(model, warmup_steps=1000)
+
     # Estimate output space
     output_space = estimator.estimate(model, batch_size=BATCH_SIZE)
 
@@ -67,6 +72,20 @@ def analyze_output_space(model, param_init_config):
     simplicity_score = 1 / mean_freq if mean_freq != 0 else 1000
 
     return simplicity_score
+
+def warmup(model, warmup_steps=1000):
+    """Warmup the model to calibrate running statistics without updating weights."""
+    # Freeze the weights
+    for param in model.parameters():
+        param.requires_grad = False
+
+    # Ensure the model is in training mode
+    model.train()
+
+    # Perform the warmup
+    for _ in range(warmup_steps):
+        x = 2 * torch.rand(1, 2).to(DEVICE) - 1  # Random input in the range [-1, 1]
+        _ = model(x)  # Forward pass to warm up the model
 
 
 def test(model=None):
