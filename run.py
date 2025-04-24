@@ -20,10 +20,10 @@ def init_flags():
 
     flags = {
             "env_type": "dmc",
-            "env_name": "pendulum-swingup",
+            "env_name": "humanoid-run",
             "seed":0,
             "start_timesteps": 1e4,
-            "max_timesteps": 5e5,
+            "max_timesteps": 1e6,
             "expl_noise": 0.01,
             "batch_size": 256,
             "discount":0.99,
@@ -71,8 +71,8 @@ def main(policy_name = 'TD3'):
         kwargs["noise_clip"] = args["noise_clip"] * max_action
         kwargs["policy_freq"] = args["policy_freq"]
         kwargs["use_RSNorm"] = True
-        kwargs["use_LayerNorm"] = False
-        kwargs["use_Residual"] = False
+        kwargs["use_LayerNorm"] = True
+        kwargs["use_Residual"] = True
 
         policy = create_agent(**kwargs)
         
@@ -133,32 +133,34 @@ def main(policy_name = 'TD3'):
         return evaluations
 
 # ======== evaluate ============
-evaluation_td3 = main(policy_name = 'TD3')
+# evaluation_td3 = main(policy_name = 'TD3')
 
-plt.figure(figsize=(10, 5))
-plt.plot(evaluation_td3)
-plt.xlabel('Episode')
-plt.ylabel('Reward')
-plt.title('Pendulum with TD3')
-plt.grid()
-plt.show()
+# plt.figure(figsize=(10, 5))
+# plt.plot(evaluation_td3)
+# plt.xlabel('Episode')
+# plt.ylabel('Reward')
+# plt.title('Pendulum with TD3')
+# plt.grid()
+# plt.show()
 
 # save and load the reward data
 
-import pickle
-with open('evaluation_td3_RSNorm.pkl', 'wb') as file:
-    pickle.dump(evaluation_td3, file)
 
 # with open('evaluation_td3.pkl', 'rb') as file:
 #     loaded_data = pickle.load(file)
 # print(loaded_data)
 
-# evaluation_sac = main(policy_name = 'SAC')
+evaluation_sac = main(policy_name = 'SAC')
 
-# plt.figure(figsize=(10, 5))
-# plt.plot(evaluation_sac)
-# plt.xlabel('Episode')
-# plt.ylabel('Reward')
-# plt.title('Pendulum with SAC')
-# plt.grid()
-# plt.show()
+plt.figure(figsize=(10, 5))
+plt.plot(evaluation_sac)
+plt.xlabel('Episode')
+plt.ylabel('Reward')
+plt.title('Humanoid Run with SAC')
+plt.grid()
+plt.show()
+plt.savefig('humanoid_run_sac.png')
+
+import pickle
+with open('evaluation_sac_simba_humanoid.pkl', 'wb') as file:
+    pickle.dump(evaluation_sac, file)
