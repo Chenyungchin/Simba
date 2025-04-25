@@ -45,7 +45,6 @@ class Actor_SAC(nn.Module):
     def forward(self, state):
         if self.use_RSNorm:
             state = self.running_norm(state)
-        
         x = F.relu(self.l1(state))
         # Adding residual connections here
         if self.use_Residual:
@@ -56,7 +55,8 @@ class Actor_SAC(nn.Module):
             x = self.layer_norm2(x)
         x = self.l3(x)
         mean, log_std = torch.split(x, self.action_dim, dim=-1)
-        log_std = torch.clamp(log_std, min=LOG_STD_MIN, max=LOG_STD_MAX)
+        # log_std = torch.clamp(log_std, min=LOG_STD_MIN, max=LOG_STD_MAX)
+        log_std = LOG_STD_MIN + 0.5 * (LOG_STD_MAX - LOG_STD_MIN) * (torch.tanh(log_std) + 1) # what simba does for log_std norm
         return mean, log_std
 
     def sample(self, state):

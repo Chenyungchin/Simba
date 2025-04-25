@@ -34,35 +34,35 @@ def make_env(
     env_type: str,
     seed: int,
     env_name: str,
-    rescale_action: bool,
-    no_termination: bool,
-    action_repeat: int,
-    reward_scale: float,
-    max_episode_steps: int,
+    rescale_action: bool = False,
+    no_termination: bool = False,
+    action_repeat: int = 1,
+    reward_scale: float = 1.0,
+    max_episode_steps: int = 1000,
     **kwargs,
 ) -> gym.Env:
 
     if env_type == 'dmc':
         env = make_dmc_env(env_name, seed)
-    else:
-        raise NotImplementedError(f"Environment type {env_type} not implemented.")
-    
 
-    if rescale_action:
-        env = RescaleAction(env, -1.0, 1.0)
+        if rescale_action:
+            env = RescaleAction(env, -1.0, 1.0)
 
-    if no_termination:
-        env = DoNotTerminate(env)
+        if no_termination:
+            env = DoNotTerminate(env)
 
-    # limit max_steps before action_repeat.
-    env = TimeLimit(env, max_episode_steps)
+        # limit max_steps before action_repeat.
+        env = TimeLimit(env, max_episode_steps)
 
-    if action_repeat > 1:
-        env = RepeatAction(env, action_repeat)
+        if action_repeat > 1:
+            env = RepeatAction(env, action_repeat)
 
-    env = ScaleReward(env, reward_scale)
+        env = ScaleReward(env, reward_scale)
 
-    env.observation_space.seed(seed)
-    env.action_space.seed(seed)    
+        env.observation_space.seed(seed)
+        env.action_space.seed(seed)    
+
+    elif env_type == 'gym':
+        env = gym.make(env_name)
 
     return env

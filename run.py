@@ -16,10 +16,10 @@ from scale_rl.evaluation import eval_policy
 
 
 # ================ main =================
-def init_flags(env_name="pendulum-swingup"):
+def init_flags(env_name="Pendulum-v1"):
 
     flags = {
-        "env_type": "dmc",
+        "env_type": "gym",
         # "env_name": "humanoid-run",
         # "env_name": "pendulum-swingup",
         "env_name": env_name,
@@ -50,6 +50,8 @@ def main(policy_name='TD3', env_name="pendulum-swingup", use_RSNorm=False, use_L
 
         args = init_flags(env_name=env_name)
         env = create_envs(args["env_type"], args["env_name"], args["seed"], args["rescale_action"], args["no_termination"], args["action_repeat"], args["reward_scale"])
+        # env = gym.make("Pendulum-v1") # use gym env for testing
+        # env = gym.make("Humanoid-v5") # use gym env for testing
         env.reset(seed=args["seed"])
         env.action_space.seed(args["seed"])
         torch.manual_seed(args["seed"])
@@ -138,9 +140,13 @@ def main(policy_name='TD3', env_name="pendulum-swingup", use_RSNorm=False, use_L
 if __name__ == "__main__":
     # =========== run config ============
     policy_name = 'SAC'
-    env_name = "pendulum-swingup"
+    # dmc envs
+    # env_name = "pendulum-swingup"
     # env_name = "humanoid-run"
-    use_RSNorm = True
+    # gym envs
+    # env_name = "Pendulum-v1"
+    env_name = "Humanoid-v5"
+    use_RSNorm = False
     use_LayerNorm = False
     use_Residual = False
 

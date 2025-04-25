@@ -1,9 +1,11 @@
 import numpy as np
 from scale_rl.envs import create_envs
+import gymnasium as gym
 
 # policy evaluation with Monte Carlo
 def eval_policy(policy, env_type, env_name, seed, rescale_action, no_termination, action_repeat, reward_scale, eval_episodes=10):
         eval_env = create_envs(env_type, env_name, seed, rescale_action, no_termination, action_repeat, reward_scale)
+        # eval_env = gym.make("Humanoid-v5") # use gym env for testing
         eval_env.reset(seed=seed)
         avg_reward = 0.
         for _ in range(eval_episodes):
