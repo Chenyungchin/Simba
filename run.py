@@ -16,37 +16,39 @@ from scale_rl.evaluation import eval_policy
 
 
 # ================ main =================
-def init_flags():
+def init_flags(env_name="pendulum-swingup"):
 
     flags = {
-            "env_type": "dmc",
-            "env_name": "humanoid-run",
-            "seed":0,
-            "start_timesteps": 1e4,
-            "max_timesteps": 1e6,
-            "expl_noise": 0.01,
-            "batch_size": 256,
-            "discount":0.99,
-            "tau": 0.005,
-            "policy_noise": 0.05,
-            "noise_clip":0.5,
-            "policy_freq": 2,
-            "save_model": "store_true",
-            "rescale_action": True,
-            "no_termination": False,
-            "action_repeat": 2,
-            "reward_scale": 1
+        "env_type": "dmc",
+        # "env_name": "humanoid-run",
+        # "env_name": "pendulum-swingup",
+        "env_name": env_name,
+        "seed":0,
+        "start_timesteps": 1e4,
+        "max_timesteps": 1e6,
+        "expl_noise": 0.01,
+        "batch_size": 256,
+        "discount":0.99,
+        "tau": 0.005,
+        "policy_noise": 0.05,
+        "noise_clip":0.5,
+        "policy_freq": 2,
+        "save_model": "store_true",
+        "rescale_action": True,
+        "no_termination": False,
+        "action_repeat": 2,
+        "reward_scale": 1
     }
 
     return flags
 
-def main(policy_name = 'TD3'):
+def main(policy_name='TD3', env_name="pendulum-swingup", use_RSNorm=False, use_LayerNorm=False, use_Residual=False):
         
         #############################
         # envs
         #############################
 
-        args = init_flags()
+        args = init_flags(env_name=env_name)
         env = create_envs(args["env_type"], args["env_name"], args["seed"], args["rescale_action"], args["no_termination"], args["action_repeat"], args["reward_scale"])
         env.reset(seed=args["seed"])
         env.action_space.seed(args["seed"])
@@ -70,9 +72,9 @@ def main(policy_name = 'TD3'):
         kwargs["policy_noise"] = args["policy_noise"] * max_action
         kwargs["noise_clip"] = args["noise_clip"] * max_action
         kwargs["policy_freq"] = args["policy_freq"]
-        kwargs["use_RSNorm"] = True
-        kwargs["use_LayerNorm"] = True
-        kwargs["use_Residual"] = True
+        kwargs["use_RSNorm"] = use_RSNorm
+        kwargs["use_LayerNorm"] = use_LayerNorm
+        kwargs["use_Residual"] = use_Residual
 
         policy = create_agent(**kwargs)
         
@@ -132,35 +134,37 @@ def main(policy_name = 'TD3'):
 
         return evaluations
 
-# ======== evaluate ============
-# evaluation_td3 = main(policy_name = 'TD3')
 
-# plt.figure(figsize=(10, 5))
-# plt.plot(evaluation_td3)
-# plt.xlabel('Episode')
-# plt.ylabel('Reward')
-# plt.title('Pendulum with TD3')
-# plt.grid()
-# plt.show()
+if __name__ == "__main__":
+    # =========== run config ============
+    policy_name = 'SAC'
+    env_name = "pendulum-swingup"
+    # env_name = "humanoid-run"
+    use_RSNorm = True
+    use_LayerNorm = False
+    use_Residual = False
 
-# save and load the reward data
+    print(f"Policy: {policy_name}, Env: {env_name}, use_RSNorm: {use_RSNorm}, use_LayerNorm: {use_LayerNorm}, use_Residual: {use_Residual}")
 
+    evaluation_sac = main(
+        policy_name = policy_name,
+        env_name = env_name,
+        use_RSNorm = use_RSNorm,
+        use_LayerNorm = use_LayerNorm,
+        use_Residual = use_Residual
+    )
 
-# with open('evaluation_td3.pkl', 'rb') as file:
-#     loaded_data = pickle.load(file)
-# print(loaded_data)
+    task_name = f"{policy_name}_{env_name}_RSNorm_{use_RSNorm}_LayerNorm_{use_LayerNorm}_Residual_{use_Residual}"
 
-evaluation_sac = main(policy_name = 'SAC')
+    plt.figure(figsize=(10, 5))
+    plt.plot(evaluation_sac)
+    plt.xlabel('Episode')
+    plt.ylabel('Reward')
+    plt.title(f"{task_name} Evaluation")
+    plt.grid()
+    plt.show()
+    plt.savefig(f'{task_name}.png')
 
-plt.figure(figsize=(10, 5))
-plt.plot(evaluation_sac)
-plt.xlabel('Episode')
-plt.ylabel('Reward')
-plt.title('Humanoid Run with SAC')
-plt.grid()
-plt.show()
-plt.savefig('humanoid_run_sac.png')
-
-import pickle
-with open('evaluation_sac_simba_humanoid.pkl', 'wb') as file:
-    pickle.dump(evaluation_sac, file)
+    import pickle
+    with open(f'{task_name}.pkl', 'wb') as file:
+        pickle.dump(evaluation_sac, file)

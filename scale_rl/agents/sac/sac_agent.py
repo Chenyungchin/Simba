@@ -20,11 +20,28 @@ class SAC(object):
         discount=0.99,
         tau=0.005,
         alpha=0.2,
+        # simba param
+        use_RSNorm=False,
+        use_LayerNorm=False,
+        use_Residual=False,
     ):
-        self.actor = Actor_SAC(state_dim, action_dim, max_action).to(device)
+        self.actor = Actor_SAC(
+            state_dim, 
+            action_dim, 
+            max_action,
+            use_RSNorm=use_RSNorm,
+            use_LayerNorm=use_LayerNorm,
+            use_Residual=use_Residual,
+        ).to(device)
         self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), lr=3e-4)
 
-        self.critic = Critic_SAC(state_dim, action_dim).to(device)
+        self.critic = Critic_SAC(
+            state_dim, 
+            action_dim,
+            use_RSNorm=use_RSNorm,
+            use_LayerNorm=use_LayerNorm,
+            use_Residual=use_Residual,
+        ).to(device)
         self.critic_target = copy.deepcopy(self.critic)
         self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), lr=3e-4)
 

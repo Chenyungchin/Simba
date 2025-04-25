@@ -23,7 +23,7 @@ class ResidualBlock(nn.Module):
         return x + residual
 
 class Actor_SAC(nn.Module):
-    def __init__(self, state_dim, action_dim, max_action, use_RSNorm = True, use_LayerNorm=True, use_Residual=True):
+    def __init__(self, state_dim, action_dim, max_action, use_RSNorm=False, use_LayerNorm=False, use_Residual=False):
         super(Actor_SAC, self).__init__()
         self.running_norm = RunningNorm([state_dim])
         self.use_RSNorm = use_RSNorm
@@ -39,6 +39,8 @@ class Actor_SAC(nn.Module):
         self.l3 = nn.Linear(256, 2 * action_dim)
         self.action_dim = action_dim
         self.max_action = max_action
+
+        print(f"Actor_SAC: use_RSNorm: {self.use_RSNorm}, use_LayerNorm: {self.use_LayerNorm}, use_Residual: {self.use_Residual}")
 
     def forward(self, state):
         if self.use_RSNorm:
@@ -76,7 +78,7 @@ class Actor_SAC(nn.Module):
         return action, log_prob
 
 class Critic_SAC(nn.Module):
-    def __init__(self, state_dim, action_dim, use_RSNorm = True, use_LayerNorm=True, use_Residual=True):
+    def __init__(self, state_dim, action_dim, use_RSNorm=False, use_LayerNorm=False, use_Residual=False):
         super(Critic_SAC, self).__init__()
         self.state_norm = RunningNorm([state_dim])
         self.action_norm = RunningNorm([action_dim])
@@ -97,6 +99,8 @@ class Critic_SAC(nn.Module):
         self.l5 = nn.Linear(256, 256)
         self.layer_norm3 = nn.LayerNorm(256)
         self.l6 = nn.Linear(256, 1)
+
+        print(f"Critic_SAC: use_RSNorm: {self.use_RSNorm}, use_LayerNorm: {self.use_LayerNorm}, use_Residual: {self.use_Residual}")
 
 
     def forward(self, state, action):

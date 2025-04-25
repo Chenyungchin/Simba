@@ -23,7 +23,11 @@ def create_agent(
             action_dim=action_dim,
             max_action=max_action,
             discount=discount,
-            tau=tau
+            tau=tau,
+            # simba param
+            use_RSNorm=use_RSNorm,
+            use_LayerNorm=use_LayerNorm,
+            use_Residual=use_Residual,
         )
     elif policy_name == 'TD3':
         agent = TD3(
