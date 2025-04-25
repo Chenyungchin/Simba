@@ -25,7 +25,7 @@ def init_flags(env_name="Pendulum-v1"):
         "env_name": env_name,
         "seed":0,
         "start_timesteps": 1e4,
-        "max_timesteps": 1e6,
+        "max_timesteps": 2e5,
         "expl_noise": 0.01,
         "batch_size": 256,
         "discount":0.99,
