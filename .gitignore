@@ -1,3 +1,4 @@
 RL/
 __pycache__/
 *.slurm
+/slurm_log
