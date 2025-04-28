@@ -1,0 +1,3 @@
+/scratch/gpfs/yc9182/RL/Simba/RL/lib64/python3.9/site-packages/glfw/__init__.py:917: GLFWError: (65550) b'X11: The DISPLAY environment variable is missing'
+  warnings.warn(message, GLFWError)
+slurmstepd: error: *** JOB 63922327 ON della-i14g6 CANCELLED AT 2025-04-27T17:59:41 ***

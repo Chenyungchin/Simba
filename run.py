@@ -144,10 +144,10 @@ if __name__ == "__main__":
     # env_name = "pendulum-swingup"
     # env_name = "humanoid-run"
     # gym envs
-    # env_name = "Pendulum-v1"
-    env_name = "Humanoid-v5"
+    env_name = "Pendulum-v1"
+    # env_name = "Humanoid-v5"
     use_RSNorm = False
-    use_LayerNorm = False
+    use_LayerNorm = True
     use_Residual = False
 
     print(f"Policy: {policy_name}, Env: {env_name}, use_RSNorm: {use_RSNorm}, use_LayerNorm: {use_LayerNorm}, use_Residual: {use_Residual}")
@@ -169,8 +169,8 @@ if __name__ == "__main__":
     plt.title(f"{task_name} Evaluation")
     plt.grid()
     plt.show()
-    plt.savefig(f'{task_name}.png')
+    plt.savefig(f'output/{task_name}.png')
 
     import pickle
-    with open(f'{task_name}.pkl', 'wb') as file:
+    with open(f'output/{task_name}.pkl', 'wb') as file:
         pickle.dump(evaluation_sac, file)
