@@ -144,10 +144,10 @@ if __name__ == "__main__":
     # env_name = "pendulum-swingup"
     # env_name = "humanoid-run"
     # gym envs
-    env_name = "Pendulum-v1"
-    # env_name = "Humanoid-v5"
-    use_RSNorm = False
-    use_LayerNorm = True
+    # env_name = "Pendulum-v1"
+    env_name = "Humanoid-v5"
+    use_RSNorm = True
+    use_LayerNorm = False
     use_Residual = False
 
     print(f"Policy: {policy_name}, Env: {env_name}, use_RSNorm: {use_RSNorm}, use_LayerNorm: {use_LayerNorm}, use_Residual: {use_Residual}")
