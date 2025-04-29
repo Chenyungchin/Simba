@@ -113,25 +113,32 @@ class Critic_SAC(nn.Module):
 
 
     def forward(self, state, action):
+        # running norm
         if self.use_RSNorm:
             state = self.state_norm(state)
             action = self.action_norm(action)
         sa = torch.cat([state, action], 1)
-
-        q1 = F.relu(self.l1(sa))
+        # linear layer without relu
+        q1 = self.l1(sa)
+        # residual
         if self.use_Residual:
             for block in self.blocks:
                 q1 = block(q1)
-        q1 = F.relu(self.l2(q1))
+        
+        # q1 = self.l2(q1)
+        # layer norm
         if self.use_LayerNorm:
             q1 = self.layer_norm2(q1)
         q1 = self.l3(q1)
-
-        q2 = F.relu(self.l4(sa))
+        
+        # linear layer without relu
+        q2 = self.l4(sa)
+        # residual
         if self.use_Residual:
             for block in self.blocks2:
                 q2 = block(q2)
-        q2 = F.relu(self.l5(q2))
+        # q2 = self.l5(q2)
+        # layer norm
         if self.use_LayerNorm:
             q2 = self.layer_norm3(q2)
         q2 = self.l6(q2)
@@ -139,16 +146,19 @@ class Critic_SAC(nn.Module):
 
 
     def Q1(self, state, action):
+        # running norm
         if self.use_RSNorm:
             state = self.state_norm(state)
             action = self.action_norm(action)
         sa = torch.cat([state, action], 1)
-
-        q1 = F.relu(self.l1(sa))
+        # linear layer without relu
+        q1 = self.l1(sa)
+        # residual
         if self.use_Residual:
             for block in self.blocks:
                 q1 = block(q1)
-        q1 = F.relu(self.l2(q1))
+        # q1 = F.relu(self.l2(q1))
+        # layer norm
         if self.use_LayerNorm:
             q1 = self.layer_norm2(q1)
         q1 = self.l3(q1)
