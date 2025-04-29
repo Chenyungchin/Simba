@@ -15,6 +15,9 @@ def create_agent(
         use_RSNorm,
         use_LayerNorm,
         use_Residual,
+        # hyperparam
+        lr=3e-4,
+        weight_decay=0.0,
 ):  
     # TODO: add other agents
     if policy_name == 'SAC':
@@ -28,6 +31,9 @@ def create_agent(
             use_RSNorm=use_RSNorm,
             use_LayerNorm=use_LayerNorm,
             use_Residual=use_Residual,
+            # hyperparam
+            lr=lr,
+            weight_decay=weight_decay,
         )
     elif policy_name == 'TD3':
         agent = TD3(
@@ -43,6 +49,9 @@ def create_agent(
             use_RSNorm=use_RSNorm,
             use_LayerNorm=use_LayerNorm,
             use_Residual=use_Residual,
+            # hyperparam
+            lr=lr,
+            weight_decay=weight_decay,
         )
 
     return agent

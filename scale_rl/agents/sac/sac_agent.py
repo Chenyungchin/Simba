@@ -24,6 +24,9 @@ class SAC(object):
         use_RSNorm=False,
         use_LayerNorm=False,
         use_Residual=False,
+        # hyperparam
+        lr=3e-4,
+        weight_decay=0.0,
     ):
         self.actor = Actor_SAC(
             state_dim, 
@@ -33,7 +36,11 @@ class SAC(object):
             use_LayerNorm=use_LayerNorm,
             use_Residual=use_Residual,
         ).to(device)
-        self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), lr=3e-4)
+        self.actor_optimizer = torch.optim.Adam(
+            self.actor.parameters(), 
+            lr=lr,
+            weight_decay=weight_decay,
+        )
 
         self.critic = Critic_SAC(
             state_dim, 
@@ -43,7 +50,14 @@ class SAC(object):
             use_Residual=use_Residual,
         ).to(device)
         self.critic_target = copy.deepcopy(self.critic)
-        self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), lr=3e-4)
+        self.critic_optimizer = torch.optim.Adam(
+            self.critic.parameters(), 
+            lr=lr,
+            weight_decay=weight_decay,
+        )
+
+        print(f"lr: {lr}")
+        print(f"weight_decay: {weight_decay}")
 
         self.max_action = max_action
         self.discount = discount

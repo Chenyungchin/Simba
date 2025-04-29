@@ -26,6 +26,9 @@ class TD3(object):
         use_RSNorm=False,
         use_LayerNorm=False,
         use_Residual=False,
+        # hyperparam
+        lr=3e-4,
+        weight_decay=0.0,
     ):
 
         self.actor = Actor_TD3(

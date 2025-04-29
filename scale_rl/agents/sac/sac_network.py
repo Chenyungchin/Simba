@@ -9,11 +9,11 @@ LOG_STD_MAX = 2
 epsilon = 1e-6
 
 class ResidualBlock(nn.Module):
-    def __init__(self, input_dim):
+    def __init__(self, hidden_dim):
         super(ResidualBlock, self).__init__()
-        self.layer_norm = nn.LayerNorm(input_dim)
-        self.linear1 = nn.Linear(input_dim, input_dim)
-        self.linear2 = nn.Linear(input_dim, input_dim)
+        self.layer_norm = nn.LayerNorm(hidden_dim)
+        self.linear1 = nn.Linear(hidden_dim, 4 * hidden_dim)
+        self.linear2 = nn.Linear(4 * hidden_dim, hidden_dim)
 
     def forward(self, x):
         residual = x
@@ -29,32 +29,39 @@ class Actor_SAC(nn.Module):
         self.use_RSNorm = use_RSNorm
         self.use_LayerNorm = use_LayerNorm
         self.use_Residual = use_Residual
+        self.hidden_dim = 128
 
-        self.l1 = nn.Linear(state_dim, 256)
-        self.l2 = nn.Linear(256, 256)
+        self.l1 = nn.Linear(state_dim, self.hidden_dim)
+        self.l2 = nn.Linear(self.hidden_dim, self.hidden_dim)
         # Add layer normalization here (for pre norm)
-        n = 2
-        self.blocks = nn.ModuleList(ResidualBlock(256) for _ in range(n))
-        self.layer_norm2 = nn.LayerNorm(256)
-        self.l3 = nn.Linear(256, 2 * action_dim)
+        n = 1
+        self.blocks = nn.ModuleList(ResidualBlock(self.hidden_dim) for _ in range(n))
+        self.layer_norm2 = nn.LayerNorm(self.hidden_dim)
+        # separate mean and log_std
+        self.l3 = nn.Linear(self.hidden_dim, action_dim)
+        self.l4 = nn.Linear(self.hidden_dim, action_dim)
         self.action_dim = action_dim
         self.max_action = max_action
 
         print(f"Actor_SAC: use_RSNorm: {self.use_RSNorm}, use_LayerNorm: {self.use_LayerNorm}, use_Residual: {self.use_Residual}")
 
     def forward(self, state):
+        # running norm
         if self.use_RSNorm:
             state = self.running_norm(state)
-        x = F.relu(self.l1(state))
-        # Adding residual connections here
+        # linear layer without relu
+        x = self.l1(state)
+        # residual
         if self.use_Residual:
             for block in self.blocks:
                 x = block(x)
-        x = F.relu(self.l2(x))
+        # layer norm
         if self.use_LayerNorm:
             x = self.layer_norm2(x)
-        x = self.l3(x)
-        mean, log_std = torch.split(x, self.action_dim, dim=-1)
+        
+        mean = self.l3(x)
+        log_std = self.l4(x)
+        # mean, log_std = torch.split(x, self.action_dim, dim=-1)
         # log_std = torch.clamp(log_std, min=LOG_STD_MIN, max=LOG_STD_MAX)
         log_std = LOG_STD_MIN + 0.5 * (LOG_STD_MAX - LOG_STD_MIN) * (torch.tanh(log_std) + 1) # what simba does for log_std norm
         return mean, log_std
@@ -87,18 +94,20 @@ class Critic_SAC(nn.Module):
         self.use_LayerNorm = use_LayerNorm
         self.use_Residual = use_Residual
 
-        self.l1 = nn.Linear(state_dim + action_dim, 256)
-        n = 2
-        self.blocks = nn.ModuleList(ResidualBlock(256) for _ in range(n))
-        self.l2 = nn.Linear(256, 256)
-        self.layer_norm2 = nn.LayerNorm(256)
-        self.l3 = nn.Linear(256, 1)
+        self.hidden_dim = 512
 
-        self.l4 = nn.Linear(state_dim + action_dim, 256)
-        self.blocks2 = nn.ModuleList(ResidualBlock(256) for _ in range(n))
-        self.l5 = nn.Linear(256, 256)
-        self.layer_norm3 = nn.LayerNorm(256)
-        self.l6 = nn.Linear(256, 1)
+        self.l1 = nn.Linear(state_dim + action_dim, self.hidden_dim)
+        n = 2
+        self.blocks = nn.ModuleList(ResidualBlock(self.hidden_dim) for _ in range(n))
+        self.l2 = nn.Linear(self.hidden_dim, self.hidden_dim)
+        self.layer_norm2 = nn.LayerNorm(self.hidden_dim)
+        self.l3 = nn.Linear(self.hidden_dim, 1)
+
+        self.l4 = nn.Linear(state_dim + action_dim, self.hidden_dim)
+        self.blocks2 = nn.ModuleList(ResidualBlock(self.hidden_dim) for _ in range(n))
+        self.l5 = nn.Linear(self.hidden_dim, self.hidden_dim)
+        self.layer_norm3 = nn.LayerNorm(self.hidden_dim)
+        self.l6 = nn.Linear(self.hidden_dim, 1)
 
         print(f"Critic_SAC: use_RSNorm: {self.use_RSNorm}, use_LayerNorm: {self.use_LayerNorm}, use_Residual: {self.use_Residual}")
 

@@ -42,7 +42,7 @@ def init_flags(env_name="Pendulum-v1"):
 
     return flags
 
-def main(policy_name='TD3', env_name="pendulum-swingup", use_RSNorm=False, use_LayerNorm=False, use_Residual=False):
+def main(policy_name='TD3', env_name="pendulum-swingup", use_RSNorm=False, use_LayerNorm=False, use_Residual=False, lr=1e-4, weight_decay=1e-2):
         
         #############################
         # envs
@@ -77,6 +77,8 @@ def main(policy_name='TD3', env_name="pendulum-swingup", use_RSNorm=False, use_L
         kwargs["use_RSNorm"] = use_RSNorm
         kwargs["use_LayerNorm"] = use_LayerNorm
         kwargs["use_Residual"] = use_Residual
+        kwargs["lr"] = lr
+        kwargs["weight_decay"] = weight_decay
 
         policy = create_agent(**kwargs)
         
@@ -147,8 +149,10 @@ if __name__ == "__main__":
     # env_name = "Pendulum-v1"
     env_name = "Humanoid-v5"
     use_RSNorm = True
-    use_LayerNorm = False
-    use_Residual = False
+    use_LayerNorm = True
+    use_Residual = True
+    lr = 1e-4
+    weight_decay = 1e-2
 
     print(f"Policy: {policy_name}, Env: {env_name}, use_RSNorm: {use_RSNorm}, use_LayerNorm: {use_LayerNorm}, use_Residual: {use_Residual}")
 
@@ -157,10 +161,24 @@ if __name__ == "__main__":
         env_name = env_name,
         use_RSNorm = use_RSNorm,
         use_LayerNorm = use_LayerNorm,
-        use_Residual = use_Residual
+        use_Residual = use_Residual,
+        lr = lr,
+        weight_decay = weight_decay,
     )
 
-    task_name = f"{policy_name}_{env_name}_RSNorm_{use_RSNorm}_LayerNorm_{use_LayerNorm}_Residual_{use_Residual}"
+    task_name = f"{policy_name}_{env_name}"
+    if use_RSNorm:
+        task_name += "_RSNorm"
+    if use_LayerNorm:
+        task_name += "_LayerNorm"
+    if use_Residual:
+        task_name += "_Residual"
+    task_name += f"_lr_{lr}_weight_decay_{weight_decay}"
+
+    import time
+    time_str = time.strftime("%Y-%m-%d_%H-%M-%S", time.localtime())
+    task_name += f"_{time_str}"
+
 
     plt.figure(figsize=(10, 5))
     plt.plot(evaluation_sac)
@@ -168,7 +186,7 @@ if __name__ == "__main__":
     plt.ylabel('Reward')
     plt.title(f"{task_name} Evaluation")
     plt.grid()
-    plt.show()
+    # plt.show()
     plt.savefig(f'output/{task_name}.png')
 
     import pickle
