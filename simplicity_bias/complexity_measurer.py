@@ -23,7 +23,7 @@ DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
 
-def analyze_output_space(model, input_space, param_init_config):
+def analyze_output_space(model, input_space, param_init_config, policy_name="SAC"):
     """
     Inputs:
         model: The model to analyze.
@@ -34,7 +34,8 @@ def analyze_output_space(model, input_space, param_init_config):
     Outputs:
     """
 
-    method = param_init_config["method"]
+    weight_mode = param_init_config["weight_mode"]
+    bias_mode = param_init_config["bias_mode"]
     amplitude = param_init_config["amplitude"]
 
     X1, X2, Y1, Y2 = input_space
@@ -42,14 +43,15 @@ def analyze_output_space(model, input_space, param_init_config):
     estimator = LinearDecisionSpaceEstimator(start=(X1, Y1), end=(X2, Y2), steps=POINTS_PER_AXIS)
 
     # Estimate outputs spaces
-    print(f"Param Initialization Method: {method}")
+    print(f"Weight Initialization Method: {weight_mode}")
+    print(f"Bias Initialization Method: {bias_mode}")
     print(f"Param Initialization Amplitude: {amplitude:.2f}")
 
     # Initialize random weights
     initialize_weights(
         model,
-        weight_mode=method,
-        bias_mode=method,
+        weight_mode=weight_mode,
+        bias_mode=bias_mode,
         W_amplitude=amplitude,
         b_amplitude=amplitude,
     )
@@ -58,7 +60,7 @@ def analyze_output_space(model, input_space, param_init_config):
     warmup(model, warmup_steps=1000)
 
     # Estimate output space
-    output_space = estimator.estimate(model, batch_size=BATCH_SIZE)
+    output_space = estimator.estimate(model, batch_size=BATCH_SIZE, policy_name=policy_name)
 
     # Compute Fourier decomposition
     coeff_2d = torch.fft.rfft2(output_space)

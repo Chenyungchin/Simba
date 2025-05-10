@@ -27,7 +27,7 @@ class DecisionSpaceEstimator:
         self.inputs = None
         self.space_shape = None
 
-    def estimate(self, model: torch.nn.Module, batch_size=1):
+    def estimate(self, model: torch.nn.Module, batch_size=1, policy_name="SAC"):
         dataloader = torch.utils.data.DataLoader(self.inputs, batch_size=batch_size)
 
         device = next(model.parameters()).device
@@ -36,7 +36,12 @@ class DecisionSpaceEstimator:
         for data in dataloader:
             data = data.to(device)
             # TODO: implement forward function for SAC
-            outputs.append(model(data))
+            if policy_name != "SAC":
+                outputs.append(model(data))
+            # sac
+            else:
+                output = model.sample(data)[0]
+                outputs.append(output)
         outputs = torch.cat(outputs)
         outputs = outputs.reshape(self.space_shape)
         return outputs

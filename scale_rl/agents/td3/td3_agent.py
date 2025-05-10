@@ -26,6 +26,7 @@ class TD3(object):
         use_RSNorm=False,
         use_LayerNorm=False,
         use_Residual=False,
+        use_MLP_ReLU=False,
         # hyperparam
         lr=3e-4,
         weight_decay=0.0,
@@ -37,7 +38,8 @@ class TD3(object):
             max_action,
             use_RSNorm=use_RSNorm,
             use_LayerNorm=use_LayerNorm,
-            use_Residual=use_Residual
+            use_Residual=use_Residual,
+            use_MLP_ReLU=use_MLP_ReLU
         ).to(device)
 
         self.actor_target = copy.deepcopy(self.actor)
@@ -48,7 +50,8 @@ class TD3(object):
             action_dim,
             use_RSNorm=use_RSNorm,
             use_LayerNorm=use_LayerNorm,
-            use_Residual=use_Residual
+            use_Residual=use_Residual,
+            use_MLP_ReLU=use_MLP_ReLU
         ).to(device)
 
 

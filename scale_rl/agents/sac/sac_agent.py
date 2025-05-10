@@ -24,6 +24,7 @@ class SAC(object):
         use_RSNorm=False,
         use_LayerNorm=False,
         use_Residual=False,
+        use_MLP_ReLU=False,
         # hyperparam
         lr=3e-4,
         weight_decay=0.0,
@@ -35,6 +36,7 @@ class SAC(object):
             use_RSNorm=use_RSNorm,
             use_LayerNorm=use_LayerNorm,
             use_Residual=use_Residual,
+            use_MLP_ReLU=use_MLP_ReLU,
         ).to(device)
         self.actor_optimizer = torch.optim.Adam(
             self.actor.parameters(), 
@@ -48,6 +50,7 @@ class SAC(object):
             use_RSNorm=use_RSNorm,
             use_LayerNorm=use_LayerNorm,
             use_Residual=use_Residual,
+            use_MLP_ReLU=use_MLP_ReLU,
         ).to(device)
         self.critic_target = copy.deepcopy(self.critic)
         self.critic_optimizer = torch.optim.Adam(

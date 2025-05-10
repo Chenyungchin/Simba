@@ -33,8 +33,9 @@ def initialize_weights(
     W_amplitude=1.0,
     b_amplitude=0.0,
 ):
-    assert weight_mode in ["uniform", "normal", "xavier_uniform", "xavier_normal"]
+    assert weight_mode in ["uniform", "normal", "xavier_uniform", "xavier_normal", "kaiming_normal", "orthogonal_normal"]
     assert bias_mode in ["uniform", "normal", "zero"]
+
     if bias_mode != "zero":
         assert b_amplitude > 0.0, "Bias amplitude must be positive."
 
@@ -46,6 +47,10 @@ def initialize_weights(
         init_fn = lambda weight: weight.data.normal_(mean=0, std=W_amplitude)
     elif weight_mode == "xavier_normal":
         init_fn = lambda tensor: nn.init.xavier_normal_(tensor, gain=W_amplitude)
+    elif weight_mode == "kaiming_normal":
+        init_fn = lambda tensor: nn.init.kaiming_normal_(tensor, a=0, mode="fan_in", nonlinearity="relu")
+    elif weight_mode == "orthogonal_normal":
+        init_fn = lambda tensor: nn.init.orthogonal_(tensor, gain=W_amplitude)
     else:
         raise ValueError(f"Invalid distribution {weight_mode}")
 
@@ -62,16 +67,22 @@ def initialize_weights(
     # Initialize weights and biases for all linear layers
     for i, module in enumerate(model.modules()):
         if isinstance(module, nn.Linear):
-            # print(f"Module {i}: {module.__class__.__name__} - Linear")
+    # print(f"Module {i}: {module.__class__.__name__} - Linear")
+        # print(f"Module {i}: {module.__class__.__name__} - Linear")
             init_fn(module.weight)
             if module.bias is not None:
                 bias_init(module.bias)
 
         elif isinstance(module, nn.LayerNorm):
             # print(f"Module {i}: {module.__class__.__name__} - LayerNorm")
-            init_fn(module.weight)
-            if module.bias is not None:
-                bias_init(module.bias)
+            # force normal init if dim is 1
+            # if module.weight.dim() == 1:
+            #     init_fn = lambda weight: weight.data.normal_(mean=0, std=W_amplitude)
+            # init_fn(module.weight)
+
+            # if module.bias is not None:
+            #     bias_init(module.bias)
+            pass
 
         elif module.__class__.__name__ == "ResidualBlock":
             # print(f"Module {i}: {module.__class__.__name__} - ResidualBlock")

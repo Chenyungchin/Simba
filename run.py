@@ -25,7 +25,7 @@ def init_flags(env_name="Pendulum-v1"):
         "env_name": env_name,
         "seed":0,
         "start_timesteps": 1e4,
-        "max_timesteps": 2e5,
+        "max_timesteps": 5e5,
         "expl_noise": 0.01,
         "batch_size": 256,
         "discount":0.99,
@@ -36,13 +36,22 @@ def init_flags(env_name="Pendulum-v1"):
         "save_model": "store_true",
         "rescale_action": True,
         "no_termination": False,
-        "action_repeat": 2,
+        "action_repeat": 1,
         "reward_scale": 1
     }
 
     return flags
 
-def main(policy_name='TD3', env_name="pendulum-swingup", use_RSNorm=False, use_LayerNorm=False, use_Residual=False, lr=1e-4, weight_decay=1e-2):
+def main(
+        policy_name='TD3', 
+        env_name="pendulum-swingup", 
+        use_RSNorm=False, 
+        use_LayerNorm=False, 
+        use_Residual=False, 
+        use_MLP_ReLU=False,
+        lr=1e-4, 
+        weight_decay=1e-2
+):
         
         #############################
         # envs
@@ -77,6 +86,7 @@ def main(policy_name='TD3', env_name="pendulum-swingup", use_RSNorm=False, use_L
         kwargs["use_RSNorm"] = use_RSNorm
         kwargs["use_LayerNorm"] = use_LayerNorm
         kwargs["use_Residual"] = use_Residual
+        kwargs["use_MLP_ReLU"] = use_MLP_ReLU
         kwargs["lr"] = lr
         kwargs["weight_decay"] = weight_decay
 
@@ -151,6 +161,7 @@ if __name__ == "__main__":
     use_RSNorm = True
     use_LayerNorm = True
     use_Residual = True
+    use_MLP_ReLU = False
     lr = 1e-4
     weight_decay = 1e-2
 
@@ -162,17 +173,21 @@ if __name__ == "__main__":
         use_RSNorm = use_RSNorm,
         use_LayerNorm = use_LayerNorm,
         use_Residual = use_Residual,
+        use_MLP_ReLU = use_MLP_ReLU,
         lr = lr,
         weight_decay = weight_decay,
     )
 
     task_name = f"{policy_name}_{env_name}"
-    if use_RSNorm:
-        task_name += "_RSNorm"
-    if use_LayerNorm:
-        task_name += "_LayerNorm"
-    if use_Residual:
-        task_name += "_Residual"
+    if use_MLP_ReLU:
+        task_name += "_MLP_ReLU"
+    else:
+        if use_RSNorm:
+            task_name += "_RSNorm"
+        if use_LayerNorm:
+            task_name += "_LayerNorm"
+        if use_Residual:
+            task_name += "_Residual"
     task_name += f"_lr_{lr}_weight_decay_{weight_decay}"
 
     import time

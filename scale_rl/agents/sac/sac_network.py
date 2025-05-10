@@ -23,12 +23,13 @@ class ResidualBlock(nn.Module):
         return x + residual
 
 class Actor_SAC(nn.Module):
-    def __init__(self, state_dim, action_dim, max_action, use_RSNorm=False, use_LayerNorm=False, use_Residual=False):
+    def __init__(self, state_dim, action_dim, max_action, use_RSNorm=False, use_LayerNorm=False, use_Residual=False, use_MLP_ReLU=False):
         super(Actor_SAC, self).__init__()
         self.running_norm = RunningNorm([state_dim])
         self.use_RSNorm = use_RSNorm
         self.use_LayerNorm = use_LayerNorm
         self.use_Residual = use_Residual
+        self.use_MLP_ReLU = use_MLP_ReLU
         self.hidden_dim = 128
 
         self.l1 = nn.Linear(state_dim, self.hidden_dim)
@@ -46,18 +47,24 @@ class Actor_SAC(nn.Module):
         print(f"Actor_SAC: use_RSNorm: {self.use_RSNorm}, use_LayerNorm: {self.use_LayerNorm}, use_Residual: {self.use_Residual}")
 
     def forward(self, state):
-        # running norm
-        if self.use_RSNorm:
-            state = self.running_norm(state)
-        # linear layer without relu
-        x = self.l1(state)
-        # residual
-        if self.use_Residual:
-            for block in self.blocks:
-                x = block(x)
-        # layer norm
-        if self.use_LayerNorm:
-            x = self.layer_norm2(x)
+        # MLP baseline to compare with Simba
+        if self.use_MLP_ReLU:
+            x = F.relu(self.l1(state))
+            x = F.relu(self.l2(x))
+        # Simba
+        else:   
+            # running norm
+            if self.use_RSNorm:
+                state = self.running_norm(state)
+            # linear layer without relu
+            x = self.l1(state)
+            # residual
+            if self.use_Residual:
+                for block in self.blocks:
+                    x = block(x)
+            # layer norm
+            if self.use_LayerNorm:
+                x = self.layer_norm2(x)
         
         mean = self.l3(x)
         log_std = self.l4(x)
@@ -85,7 +92,7 @@ class Actor_SAC(nn.Module):
         return action, log_prob
 
 class Critic_SAC(nn.Module):
-    def __init__(self, state_dim, action_dim, use_RSNorm=False, use_LayerNorm=False, use_Residual=False):
+    def __init__(self, state_dim, action_dim, use_RSNorm=False, use_LayerNorm=False, use_Residual=False, use_MLP_ReLU=False):
         super(Critic_SAC, self).__init__()
         self.state_norm = RunningNorm([state_dim])
         self.action_norm = RunningNorm([action_dim])
@@ -93,6 +100,7 @@ class Critic_SAC(nn.Module):
         self.use_RSNorm = use_RSNorm
         self.use_LayerNorm = use_LayerNorm
         self.use_Residual = use_Residual
+        self.use_MLP_ReLU = use_MLP_ReLU
 
         self.hidden_dim = 512
 
@@ -113,53 +121,75 @@ class Critic_SAC(nn.Module):
 
 
     def forward(self, state, action):
-        # running norm
-        if self.use_RSNorm:
-            state = self.state_norm(state)
-            action = self.action_norm(action)
-        sa = torch.cat([state, action], 1)
-        # linear layer without relu
-        q1 = self.l1(sa)
-        # residual
-        if self.use_Residual:
-            for block in self.blocks:
-                q1 = block(q1)
+        # MLP baseline to compare with Simba
+        if self.use_MLP_ReLU:
+            sa = torch.cat([state, action], 1)
+            q1 = F.relu(self.l1(sa))
+            q1 = F.relu(self.l2(q1))
+
+            q2 = F.relu(self.l4(sa))
+            q2 = F.relu(self.l5(q2))
+        # Simba
+        else:
+            # running norm
+            if self.use_RSNorm:
+                state = self.state_norm(state)
+                action = self.action_norm(action)
+            sa = torch.cat([state, action], 1)
+
+            # linear layer without relu
+            q1 = self.l1(sa)
+            # residual
+            if self.use_Residual:
+                for block in self.blocks:
+                    q1 = block(q1)
+            
+            # q1 = self.l2(q1)
+            # layer norm
+            if self.use_LayerNorm:
+                q1 = self.layer_norm2(q1)
+            
+            # linear layer without relu
+            q2 = self.l4(sa)
+            # residual
+            if self.use_Residual:
+                for block in self.blocks2:
+                    q2 = block(q2)
+            # q2 = self.l5(q2)
+            # layer norm
+            if self.use_LayerNorm:
+                q2 = self.layer_norm3(q2)
         
-        # q1 = self.l2(q1)
-        # layer norm
-        if self.use_LayerNorm:
-            q1 = self.layer_norm2(q1)
+        # last linear layer for both MLP and Simba
         q1 = self.l3(q1)
-        
-        # linear layer without relu
-        q2 = self.l4(sa)
-        # residual
-        if self.use_Residual:
-            for block in self.blocks2:
-                q2 = block(q2)
-        # q2 = self.l5(q2)
-        # layer norm
-        if self.use_LayerNorm:
-            q2 = self.layer_norm3(q2)
         q2 = self.l6(q2)
         return q1, q2
 
 
     def Q1(self, state, action):
-        # running norm
-        if self.use_RSNorm:
-            state = self.state_norm(state)
-            action = self.action_norm(action)
-        sa = torch.cat([state, action], 1)
-        # linear layer without relu
-        q1 = self.l1(sa)
-        # residual
-        if self.use_Residual:
-            for block in self.blocks:
-                q1 = block(q1)
-        # q1 = F.relu(self.l2(q1))
-        # layer norm
-        if self.use_LayerNorm:
-            q1 = self.layer_norm2(q1)
+        # MLP baseline to compare with Simba
+        if self.use_MLP_ReLU:
+            sa = torch.cat([state, action], 1)
+            q1 = F.relu(self.l1(sa))
+            q1 = F.relu(self.l2(q1))
+        # Simba
+        else:
+            # running norm
+            if self.use_RSNorm:
+                state = self.state_norm(state)
+                action = self.action_norm(action)
+            sa = torch.cat([state, action], 1)
+            # linear layer without relu
+            q1 = self.l1(sa)
+            # residual
+            if self.use_Residual:
+                for block in self.blocks:
+                    q1 = block(q1)
+            # q1 = F.relu(self.l2(q1))
+            # layer norm
+            if self.use_LayerNorm:
+                q1 = self.layer_norm2(q1)
+                
+        # last linear layer for both MLP and Simba
         q1 = self.l3(q1)
         return q1

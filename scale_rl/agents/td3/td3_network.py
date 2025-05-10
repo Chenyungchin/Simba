@@ -17,11 +17,12 @@ class ResidualBlock(nn.Module):
         return x + residual
 
 class Actor_TD3(nn.Module):
-    def __init__(self, state_dim, action_dim, max_action, use_RSNorm=True, use_LayerNorm=False, use_Residual=False):
+    def __init__(self, state_dim, action_dim, max_action, use_RSNorm=True, use_LayerNorm=False, use_Residual=False, use_MLP_ReLU=False):
         """
         use_RSNorm: add RSNorm
         use_LayerNorm: add LayerNorm
         use_Residual: add ResidualBlock
+        use_MLP_ReLU: use MLP with ReLU activation (as the baseline to compare with simba)
         """
         super(Actor_TD3, self).__init__()
         self.running_norm = RunningNorm([state_dim])
@@ -55,7 +56,7 @@ class Actor_TD3(nn.Module):
 
 
 class Critic_TD3(nn.Module):
-    def __init__(self, state_dim, action_dim, use_RSNorm=True, use_LayerNorm=False, use_Residual=False):
+    def __init__(self, state_dim, action_dim, use_RSNorm=True, use_LayerNorm=False, use_Residual=False, use_MLP_ReLU=False):
         super(Critic_TD3, self).__init__()
         self.state_norm = RunningNorm([state_dim])
         self.action_norm = RunningNorm([action_dim])

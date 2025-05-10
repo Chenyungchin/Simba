@@ -12,9 +12,11 @@ def create_agent(
         policy_noise,
         noise_clip,
         policy_freq,
+        # simba param
         use_RSNorm,
         use_LayerNorm,
         use_Residual,
+        use_MLP_ReLU,
         # hyperparam
         lr=3e-4,
         weight_decay=0.0,
@@ -31,6 +33,7 @@ def create_agent(
             use_RSNorm=use_RSNorm,
             use_LayerNorm=use_LayerNorm,
             use_Residual=use_Residual,
+            use_MLP_ReLU=use_MLP_ReLU,
             # hyperparam
             lr=lr,
             weight_decay=weight_decay,
@@ -49,6 +52,7 @@ def create_agent(
             use_RSNorm=use_RSNorm,
             use_LayerNorm=use_LayerNorm,
             use_Residual=use_Residual,
+            use_MLP_ReLU=use_MLP_ReLU,
             # hyperparam
             lr=lr,
             weight_decay=weight_decay,
